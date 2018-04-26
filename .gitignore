@@ -1,6 +1,9 @@
 # dependencies
 /node_modules
 
+# test files
+/sql_queries
+
 # misc
 .DS_Store
 .env
