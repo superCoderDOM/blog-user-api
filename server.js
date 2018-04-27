@@ -188,7 +188,7 @@ app.get('/blog_posts', (req, res) => {
   let blogID = req.query.blogID;
 
   if (blogID) {
-    // A blogID is specified
+    // Only a blogID is specified
     if (isNaN(parseInt(blogID))) {
       // Specified blogID is invalid
       return res.status(400).json({msg: 'Specified blogID is not a number'});
@@ -198,15 +198,9 @@ app.get('/blog_posts', (req, res) => {
       // Fetch single blog post
       BlogPost.where({'id': blogID}).fetch()
       .then(blogPost => {
-        if(blogPost) {
+        if(blogPost && Object.keys(req.query).length === 1) {
            // Fetched object is not empty
            blogPost = blogPost.attributes;
-           // In cases where both blogID and userID are specified
-           // Check that userID matches Blog Author ID
-           if (userID && parseInt(userID) !== parseInt(blogPost.author)) {
-              // Specified userID does not match blog author ID
-              return res.status(400).json({msg: 'User ID provided does not match Blog Author ID'});
-           }
           return res.status(200).json([blogPost]); // blog entry sent as array to match other endpoints
         } else {
           // Fetched object is empty
@@ -219,8 +213,8 @@ app.get('/blog_posts', (req, res) => {
       });
     }
 
-  } else if (userID) {
-    // A userID is specified
+  } else if (userID && Object.keys(req.query).length === 1) {
+    // Only a userID is specified
     if (isNaN(parseInt(userID))) {
       // Specified userID is invalid
       return res.status(400).json({msg: 'Specified userID is not a number'});
@@ -248,6 +242,7 @@ app.get('/blog_posts', (req, res) => {
 
   } else if (Object.keys(req.query).length > 0) {
     // No blogID or userID specified BUT another parameter is present
+    // OR multiple parameters are present
     return res.status(400).json({msg: 'The url query parameter specified is invalid'});
 
   } else {
@@ -256,7 +251,7 @@ app.get('/blog_posts', (req, res) => {
     BlogPost.fetchAll()
     .then(blogPosts => {
       if (blogPosts.length > 0) {
-          // Fetched object is not empty        
+          // Fetched object is not empty
         blogPosts = blogPosts.models.map(blogPost => blogPost.attributes);
         return res.status(200).json(blogPosts);
       } else {
