@@ -99,7 +99,7 @@ app.get('/users', (req, res) => {
         if (user) {
           // Fetched object is not empty
           user = user.toJSON();
-          queryResult = {
+          userDetails = {
             id: user.id,
             username: user.username,
             email: user.email,
@@ -113,7 +113,7 @@ app.get('/users', (req, res) => {
             role: user.userRole.label,
             posts: user.userBlogPosts.length,
           };
-          return res.status(200).json(queryResult);
+          return res.status(200).json([userDetails]);
         } else {
           // Fetched object is empty
           return res.status(204).json({msg: 'User ID provided does not exist'});
@@ -139,7 +139,7 @@ app.get('/users', (req, res) => {
       if (users.length > 0) {
         // Fetched object is not empty
         users = users.toJSON();
-        queryResult = users.map(user => {
+        usersDetails = users.map(user => {
           return {
             id: user.id,
             username: user.username,
@@ -155,7 +155,7 @@ app.get('/users', (req, res) => {
             posts: user.userBlogPosts.length,
           };
         });
-        return res.status(200).json(queryResult);
+        return res.status(200).json(usersDetails);
       } else {
         // Fetched object is empty
         return res.status(204).json({msg: 'Weirdly enough, all users have disappeared!'});
