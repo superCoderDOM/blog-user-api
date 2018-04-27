@@ -116,7 +116,7 @@ app.get('/users', (req, res) => {
           return res.status(200).json(queryResult);
         } else {
           // Fetched object is empty
-          return res.status(406).json({msg: 'User ID provided does not exist'});
+          return res.status(204).json({msg: 'User ID provided does not exist'});
         }
       })
       .catch(error => {
@@ -158,7 +158,7 @@ app.get('/users', (req, res) => {
         return res.status(200).json(queryResult);
       } else {
         // Fetched object is empty
-        return res.status(406).json({msg: 'Weirdly enough, all users have disappeared!'});
+        return res.status(204).json({msg: 'Weirdly enough, all users have disappeared!'});
       }
     })
     .catch(error => {
@@ -237,7 +237,7 @@ app.get('/blog_posts', (req, res) => {
           return res.status(200).json(blogPosts);
         } else {
           // Fetched object is empty
-          return res.status(406).json({msg: 'User ID provided does not have any blog posts'});
+          return res.status(204).json({msg: 'User ID provided does not have any blog posts'});
         }
       })
       .catch(error => {
@@ -261,7 +261,7 @@ app.get('/blog_posts', (req, res) => {
         return res.status(200).json(blogPosts);
       } else {
           // Fetched object is empty
-          return res.status(406).json({msg: 'Weirdly enough, we could not find any blog posts!'});
+          return res.status(204).json({msg: 'Weirdly enough, we could not find any blog posts!'});
       }
     })
     .catch(error => {
