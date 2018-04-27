@@ -65,7 +65,7 @@ app.listen(PORT, ()=>{
 });
 
 /*=======================================
-    RETEIVE USER DATA QUERY ENDPOINTS
+    RETRIEVE USER DATA QUERY ENDPOINTS
 =========================================
 +-----------------------------------------------------------------------+
   Endpoint: '/users'
@@ -269,7 +269,7 @@ app.get('/blog_posts', (req, res) => {
 +------------------------------------------------------------------------------+
     Endpoint: '/create_blog_post'
     Function: Create a new blog post
-    Params: urlencoded request body {Object} with following key pairs
+    Params: urlencoded/JSON request body {Object} with following key pairs
       author: Integer
       title: 'String'
       content: 'String'
@@ -324,7 +324,7 @@ app.post('/create_blog_post', (req, res) => {
 +-----------------------------------------------------------------+
   Endpoint: '/edit_user/:userID'
   Function: Update user details, including their role and address
-  Params: urlencoded request body {Object} with following key pairs
+  Params: urlencoded/JSON request body {Object} with following key pairs
       userID: Int
       user: {Object}
         user_roles_id: Integer,
@@ -334,73 +334,74 @@ app.post('/create_blog_post', (req, res) => {
         address: 'String',
         city: 'String',
         province: 'String',
-        country: 'String',
         postal_code: 'String',
+        country: 'String',
 +-----------------------------------------------------------------*/
 
-app.put('/edit_user/:userID', (req, res) => {
+app.put('/edit_user', (req, res) => {
 
-  const emailTemplate = new RegExp('^([a-zA-Z0-9_\-\.]+)@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.)|(([a-zA-Z0-9\-]+\.)+))([a-zA-Z]{2,4}|[0-9]{1,3})(\]?)$');
-  const attributesToUpdate = req.body;
-  const userID = attributesToUpdate.userID;
+  // RegEx used in type='email' from W3C 
+  const emailTemplate = new RegExp('^[a-zA-Z0-9.!#$%&’*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$');
 
   // Data validation
-  if (isNaN(parseInt(userID))) {
-    if (attributesToUpdate) {
+  if (req.body) {
 
-      // Assign empty objects if user or address parameters are missing
-      let userAttributesToUpdate = attributesToUpdate.user || {};
-      let userAddressAttributesToUpdate = attributesToUpdate.address || {};
+    // Assign empty objects if user or address parameters are missing
+    let userID = req.body.userID;
+    let userUpdate = req.body.user || {};
+    let addressUpdate = req.body.address || {};
 
+    // Validate userID
+    if (!isNaN(parseInt(userID))) {
       // Validate user object content
-      if (userAttributesToUpdate.user_roles_id && isNaN(parseInt(userAttributesToUpdate.user_roles_id))) {
+      if (userUpdate.user_roles_id && isNaN(parseInt(userUpdate.user_roles_id))) {
         // User role ID provided as parameter is invalid
         return res.status(400).json({msg: 'User Role ID provided is not a number'});
 
-      } else if (userAttributesToUpdate.username && userAttributesToUpdate.username.length > 255) {
+      } else if (userUpdate.username && userUpdate.username.length > 255) {
         // Username provided as parameter is too long
         return res.status(400).json({msg: 'Username provided is over 255 characters'});
 
-      } else if (userAttributesToUpdate.email && 
-          userAttributesToUpdate.email.length > 255 && 
-          emailTemplate.test(userAttributesToUpdate.email)) {
+      } else if (userUpdate.email && 
+          userUpdate.email.length > 255 && 
+          emailTemplate.test(userUpdate.email)) {
         // Email provided as parameter is invalid
         return res.status(400).json({msg: 'email provided is too long or of improper format'});
 
-      } else if (userAddressAttributesToUpdate.address && userAttributesToUpdate.address.length > 255) {
+      } else if (addressUpdate.address && addressUpdate.address.length > 255) {
         // Address provided as parameter is too long
         return res.status(400).json({msg: 'Street Address provided is over 255 characters'});
 
-      } else if (userAddressAttributesToUpdate.city && userAttributesToUpdate.city.length > 255) {
+      } else if (addressUpdate.city && addressUpdate.city.length > 255) {
         // City provided as parameter is too long
         return res.status(400).json({msg: 'City name provided is over 255 characters'});
 
-      } else if (userAddressAttributesToUpdate.province && userAttributesToUpdate.province.length > 255) {
+      } else if (addressUpdate.province && addressUpdate.province.length > 255) {
         // Province provided as parameter is too long
         return res.status(400).json({msg: 'Province name provided is over 255 characters'});
 
-      } else if (userAddressAttributesToUpdate.postal_code && userAttributesToUpdate.postal_code.length > 255) {
+      } else if (addressUpdate.postal_code && addressUpdate.postal_code.length > 255) {
         // Postal code provided as parameter is too long
         return res.status(400).json({msg: 'Postal Code provided is over 255 characters'});
 
-      } else if (userAddressAttributesToUpdate.country && userAttributesToUpdate.country.length > 255) {
+      } else if (addressUpdate.country && addressUpdate.country.length > 255) {
         // Country provided as parameter is too long
         return res.status(400).json({msg: 'Country name provided is over 255 characters'});
 
       } else {
         // All data contained in the update objects is valid
         // Update user information using a transaction to provide rollback capabilities
-        bookshelf.transaction(function(userUpdate) {
+        bookshelf.transaction(function(updateUser) {
           return User.forge({id: userID})
-          .save(userAttributesToUpdate, {
-            transacting: userUpdate,
+          .save(userUpdate, {
+            transacting: updateUser,
             method: 'update', 
             patch: true
           })
           .then(user => {
             return UserAddress.where({'user_id': userID})
-            .save(userAddressAttributesToUpdate, {
-              transacting: userUpdate,
+            .save(addressUpdate, {
+              transacting: updateUser,
               method: 'update', 
               patch: true
             })
@@ -417,11 +418,11 @@ app.put('/edit_user/:userID', (req, res) => {
         });
       }
     } else {
-      // Request body attribute object required for update is missing
-      return res.status(400).json({msg: 'attributesToUpdate Object is missing'});
+      // User ID provided as request parameter is invalid
+      return res.status(400).json({msg: 'User ID provided is not an integer'});
     }
   } else {
-    // User ID provided as request parameter is invalid
-    return res.status(400).json({msg: 'User ID provided is not an integer'});
+    // Request body attribute object required for update is missing
+    return res.status(400).json({msg: 'Request body object is missing'});
   }
 });
