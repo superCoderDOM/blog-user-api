@@ -91,7 +91,7 @@ app.get('/users', (req, res) => {
     } else {
       // Specified userID is valid
       // Fetch data for specified user
-      User.forge({id: userID})
+      User.where({id: userID})
       .fetch({
         withRelated: ['userAddress', 'userRole', 'userBlogPosts']
       })
@@ -297,35 +297,49 @@ app.post('/create_blog_post', (req, res) => {
     // Validate user ID
     if (newBlogPost.author && !isNaN(parseInt(newBlogPost.author))) {
 
-      // CHECK USERID EXISTS
-
-      // Validate blog post title
-      if (newBlogPost.title && typeof newBlogPost.title === "string" && newBlogPost.title.length <= 255) {
-
-        // Validate blog post content
-        if (newBlogPost.content && typeof newBlogPost.title === "string") {
-        
-          // Create new record
-          new BlogPost(newBlogPost).save()
-          .then(newBlogPostRecord => {
-            return res.status(200).json(newBlogPostRecord.attributes);
-          })
-          .catch(error => {
-            console.error(error);
-            return res.status(500).json(error);
-          });
+      // Check userID exists
+      User.where({id: newBlogPost.author}).fetch()
+      .then(user => {
+        if (!user){
+          // If userRole is empty, the user role id provided does not exist
+          return res.status(400).json({message: 'Specified User ID does not exist'});
         } else {
-          // Blog content field is missing
-          return res.status(400).json({message: 'Blog Post Content is not a string or is empty'});
+          // Validate blog post title
+          if (newBlogPost.title && typeof newBlogPost.title === "string" && newBlogPost.title.length <= 255) {
+    
+            // Validate blog post content
+            if (newBlogPost.content && typeof newBlogPost.title === "string") {
+            
+              // Create new record
+              new BlogPost(newBlogPost).save()
+              .then(newBlogPostRecord => {
+                return res.status(200).json(newBlogPostRecord.attributes);
+              })
+              .catch(error => {
+                console.error(error);
+                return res.status(500).json(error);
+              });
+            
+            } else {
+              // Blog content field is missing
+              return res.status(400).json({message: 'Blog Post Content is not a string or is empty'});
+            }
+          } else {
+            // Blog title field is invalid
+            return res.status(400).json({message: 'Blog Post Title either missing or not a string less than 255 characters'});
+          }
         }
-      } else {
-        // Blog title field is invalid
-        return res.status(400).json({message: 'Blog Post Title either missing or not a string less than 255 characters'});
-      }
+      })
+      .catch(error => {
+        console.error(error);
+        return res.status(500).json(error);
+      });
+
     } else {
       // Author ID provided as parameter is invalid
       return res.status(400).json({message: 'Blog Post Author ID is either missing or not a number'});
     }
+
   } else {
     // Request body attribute object required to create new post is missing
     return res.status(400).json({message: 'Request body object is missing'});
@@ -365,125 +379,150 @@ app.put('/edit_user', (req, res) => {
     // Validate userID
     if (!isNaN(parseInt(userID))) {
 
-      // CHECK USERID EXISTS
+      // Check userID exists
+      User.where({id: userID}).fetch()
+      .then(user => {
+        if (!user){
+          // If userRole is empty, the user role id provided does not exist
+          return res.status(400).json({message: 'Specified User ID does not exist'});
+        } else {
+          // UserID exists
+          // Build userUpdate object and validate content
 
-      // Build userUpdate object and validate content
+          // Validate user role id
+          if (req.body.user_roles_id) {
+            if (isNaN(parseInt(req.body.user_roles_id))) {
+              // User role ID provided as parameter is invalid
+              return res.status(400).json({message: 'User Role ID provided is not a number'});
+            } else {
+              // Check user_role_id exists
+              UserRole.where({id: req.body.user_roles_id}).fetch()
+              .then(userRole => {
+                if (!userRole){
+                  // If userRole is empty, the user role id provided does not exist
+                  return res.status(400).json({message: 'Specified user role id does not exist'});
+                } else {
+                  // User Role ID exists
+                  userUpdate.user_roles_id = req.body.user_roles_id;
 
-      // Validate user role id
-      if (req.body.user_roles_id) {
-        if (isNaN(parseInt(req.body.user_roles_id))) {
-          // User role ID provided as parameter is invalid
-          return res.status(400).json({message: 'User Role ID provided is not a number'});
-        } else {
-        // Add check that user role id is valid database entry
-        // Valid user role id
-        userUpdate.user_roles_id = req.body.user_roles_id;
+                  // Validate username
+                  if (req.body.username) {
+                    if (typeof req.body.username !== "string" || req.body.username.length > 255) {
+                      // Username provided as parameter is too long
+                      return res.status(400).json({message: 'Username must be a string less than 255 characters'});
+                    } else {
+                      // Valid username is provided
+                      userUpdate.username = req.body.username;
+                    }
+                  } 
+                  // Validate email
+                  if (req.body.email) {
+                    if (typeof req.body.email !== "string" || req.body.email.length > 255) {
+                      // Email provided as parameter is too long for database
+                      return res.status(400).json({message: 'Email must be a string less than 255 characters'});
+                    } else if (!emailTemplate.test(req.body.email)) {
+                      // Email provided as parameter is not a valid email address
+                      return res.status(400).json({message: 'Email provided is of improper format'});
+                    } else {
+                      // Valid email is provided
+                      userUpdate.email = req.body.email;
+                    }
+                  } 
+        
+                  // Build addressUpdate object and validate content
+        
+                  // Validate street address
+                  if (req.body.address) {
+                    if (typeof req.body.address !== "string" || req.body.address.length > 255) {
+                      // Address provided as parameter is too long
+                      return res.status(400).json({message: 'Street address must be a string less than 255 characters'});
+                    } else {
+                      // Valid street address is provided
+                      addressUpdate.address = req.body.address;
+                    }
+                  }
+                  // Validate city
+                  if (req.body.city) {
+                    if (typeof req.body.city !== "string" || req.body.city.length > 255) {
+                      // City provided as parameter is not a string with less than 255 character
+                      return res.status(400).json({message: 'City name must be a string less than 255 characters'});
+                    } else {
+                      // Valid city is provided
+                      addressUpdate.city = req.body.city;
+                    }
+                  }
+                  // Validate province
+                  if (req.body.province) {
+                    if (typeof req.body.province !== "string" || req.body.province.length > 255) {
+                      // Province provided as parameter is too long
+                      return res.status(400).json({message: 'Province name must be a string less than 255 characters'});
+                    } else {
+                      // Valid province is provided
+                      addressUpdate.province = req.body.province;
+                    }
+                  } 
+                  // Validate postal code
+                  if (req.body.postal_code) {
+                    if (typeof req.body.postal_code !== "string" || req.body.postal_code.length > 255) {
+                      // Postal code provided as parameter is too long
+                      return res.status(400).json({message: 'Postal Code must be a string less than 255 characters'});
+                    } else {
+                      // Valid postal code is provided
+                      addressUpdate.postal_code = req.body.postal_code;
+                    }
+                  }
+                  // Validate country
+                  if (req.body.country) {
+                    if (typeof req.body.country !== "string" || req.body.country.length > 255) {
+                      // Country provided as parameter is too long
+                      return res.status(400).json({message: 'Country name must be a string less than 255 characters'});
+                    } else {
+                      // Valid country is provided
+                      addressUpdate.country = req.body.country;
+                    }
+                  }
+                  
+                  // All data contained in the update objects is valid
+                  // Update user information using a transaction to provide rollback capabilities
+                  bookshelf.transaction(function(updateUser) {
+                    return User.forge({id: userID})
+                    .save(userUpdate, {
+                      transacting: updateUser,
+                      method: 'update', 
+                      patch: true
+                    })
+                    .then(user => {
+                      return UserAddress.where({'user_id': userID})
+                      .save(addressUpdate, {
+                        transacting: updateUser,
+                        method: 'update', 
+                        patch: true
+                      })
+                      .then(newAddress => {
+                        updatedUser = user.attributes;
+                        updatedUser.address = newAddress.attributes;
+                        return res.status(200).json(updatedUser);
+                      })
+                    })
+                  })
+                  .catch(error => {
+                    console.error(error);
+                    return res.status(500).json(error);
+                  });
+                }
+              })
+              .catch(error => {
+                console.error(error);
+                return res.status(500).json(error);
+              })
+            }
+          }
         }
-      }
-      // Validate username
-      if (req.body.username) {
-        if (typeof req.body.username !== "string" || req.body.username.length > 255) {
-          // Username provided as parameter is too long
-          return res.status(400).json({message: 'Username must be a string less than 255 characters'});
-        } else {
-        // Valid username is provided
-        userUpdate.username = req.body.username;
-        }
-      } 
-      // Validate email
-      if (req.body.email) {
-        if (typeof req.body.email !== "string" || req.body.email.length > 255) {
-          // Email provided as parameter is too long for database
-          return res.status(400).json({message: 'Email must be a string less than 255 characters'});
-        } else if (!emailTemplate.test(req.body.email)) {
-          // Email provided as parameter is not a valid email address
-          return res.status(400).json({message: 'Email provided is of improper format'});
-        } else {
-        // Valid email is provided
-        userUpdate.email = req.body.email;
-        }
-      } 
-
-      // Build addressUpdate object and validate content
-
-      // Validate street address
-      if (req.body.address) {
-        if (typeof req.body.address !== "string" || req.body.address.length > 255) {
-          // Address provided as parameter is too long
-          return res.status(400).json({message: 'Street address must be a string less than 255 characters'});
-        } else {
-          // Valid street address is provided
-          addressUpdate.address = req.body.address;
-        }
-      }
-      // Validate city
-      if (req.body.city) {
-        if (typeof req.body.city !== "string" || req.body.city.length > 255) {
-          // City provided as parameter is not a string with less than 255 character
-          return res.status(400).json({message: 'City name must be a string less than 255 characters'});
-        } else {
-          // Valid city is provided
-          addressUpdate.city = req.body.city;
-        }
-      }
-      // Validate province
-      if (req.body.province) {
-        if (typeof req.body.province !== "string" || req.body.province.length > 255) {
-          // Province provided as parameter is too long
-          return res.status(400).json({message: 'Province name must be a string less than 255 characters'});
-        } else {
-          // Valid province is provided
-          addressUpdate.province = req.body.province;
-        }
-      } 
-      // Validate postal code
-      if (req.body.postal_code) {
-        if (typeof req.body.postal_code !== "string" || req.body.postal_code.length > 255) {
-          // Postal code provided as parameter is too long
-          return res.status(400).json({message: 'Postal Code must be a string less than 255 characters'});
-        } else {
-          // Valid postal code is provided
-          addressUpdate.postal_code = req.body.postal_code;
-        }
-      }
-      // Validate country
-      if (req.body.country) {
-        if (typeof req.body.country !== "string" || req.body.country.length > 255) {
-          // Country provided as parameter is too long
-          return res.status(400).json({message: 'Country name must be a string less than 255 characters'});
-        } else {
-          // Valid country is provided
-          addressUpdate.country = req.body.country;
-        }
-      }
-      
-      // All data contained in the update objects is valid
-      // Update user information using a transaction to provide rollback capabilities
-      bookshelf.transaction(function(updateUser) {
-        return User.forge({id: userID})
-        .save(userUpdate, {
-          transacting: updateUser,
-          method: 'update', 
-          patch: true
-        })
-        .then(user => {
-          return UserAddress.where({'user_id': userID})
-          .save(addressUpdate, {
-            transacting: updateUser,
-            method: 'update', 
-            patch: true
-          })
-          .then(newAddress => {
-            updatedUser = user.attributes;
-            updatedUser.address = newAddress.attributes;
-            return res.status(200).json(updatedUser);
-          })
-        })
       })
       .catch(error => {
         console.error(error);
         return res.status(500).json(error);
-      });
+      })
 
     } else {
       // User ID provided as request parameter is invalid
