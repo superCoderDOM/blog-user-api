@@ -74,7 +74,7 @@ app.listen(PORT, ()=>{
     their address, and 
     how many blog posts they have.
   Params: Optionally pass in a user id to list specific user’s details
-    userID: url parameter string
+    userID: url query parameter 'String'
 +----------------------------------------------------------------------*/
 
 // List ALL data related to ONE user
@@ -172,13 +172,14 @@ app.get('/users', (req, res) => {
   Function: List all blog posts
   Params:
     Optionally pass in a user id to list a single user’s blog posts
-      userID: url parameter string
+      userID: url query parameter 'String'
     Optionally pass in a blog post id to get just that post
-      blogID: url parameter string
+      blogID: url query parameter 'String'
 +----------------------------------------------------------------------*/
 
 // List single blog post
 app.get('/blog_posts', (req, res) => {
+
   let userID = req.query.userID;
   let blogID = req.query.blogID;
 
@@ -198,7 +199,7 @@ app.get('/blog_posts', (req, res) => {
            blogPost = blogPost.attributes;
            // In cases where both blogID and userID are specified
            // Check that userID matches Blog Author ID
-           if (userID && userID !== blogPost.author) {
+           if (userID && parseInt(userID) !== parseInt(blogPost.author)) {
               // Specified userID does not match blog author ID
               return res.status(400).json({msg: 'User ID provided does not match Blog Author ID'});
            }
@@ -268,19 +269,19 @@ app.get('/blog_posts', (req, res) => {
 +------------------------------------------------------------------------------+
     Endpoint: '/create_blog_post'
     Function: Create a new blog post
-    Params: request body object
-      newBlogPost: object
-        author: Int
-        title: String
-        content: String
+    Params: urlencoded request body {Object} with following key pairs
+      author: Integer
+      title: 'String'
+      content: 'String'
     * 'id' field for new entry handled automatically by database
     * 'created_at' AND 'updated_at' fields handled automatically by this API
 +-----------------------------------------------------------------------------*/
 
 app.post('/create_blog_post', (req, res) => {
-
+  
+  let newBlogPost = req.body;
+  
   // Blog data validation
-  let newBlogPost = req.body.newBlogPost;
   if (newBlogPost) {
     if (newBlogPost.author && !isNaN(parseInt(newBlogPost.author))) {
       if (newBlogPost.title && newBlogPost.title.length <= 255) {
@@ -293,7 +294,7 @@ app.post('/create_blog_post', (req, res) => {
           // Create new record
           new BlogPost(newBlogPost).save()
           .then(newBlogPostRecord => {
-            console.log(newBlogPostRecord.attributes);
+            return res.status(200).json(newBlogPostRecord.attributes);
           })
           .catch(error => {
             console.error(error);
@@ -323,28 +324,28 @@ app.post('/create_blog_post', (req, res) => {
 +-----------------------------------------------------------------+
   Endpoint: '/edit_user/:userID'
   Function: Update user details, including their role and address
-  Params: 
-    userID: url parameter string
-    attributesToUpdate: body object
-      user: object
-        user_roles_id: number,
-        username: string,
-        email: string
-      address: object
-        address: '1 Space Place',
-        city: 'Ottawa',
-        province: 'Ontario',
-        country: 'Canada',
-        postal_code: 'C0C 0C0',
+  Params: urlencoded request body {Object} with following key pairs
+      userID: Int
+      user: {Object}
+        user_roles_id: Integer,
+        username: 'String',
+        email: 'String',
+      address: {Object}
+        address: 'String',
+        city: 'String',
+        province: 'String',
+        country: 'String',
+        postal_code: 'String',
 +-----------------------------------------------------------------*/
 
 app.put('/edit_user/:userID', (req, res) => {
 
-  const user_id = req.params.userID;
   const emailTemplate = new RegExp('^([a-zA-Z0-9_\-\.]+)@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.)|(([a-zA-Z0-9\-]+\.)+))([a-zA-Z]{2,4}|[0-9]{1,3})(\]?)$');
+  const attributesToUpdate = req.body;
+  const userID = attributesToUpdate.userID;
 
   // Data validation
-  if (isNaN(parseInt(user_id))) {
+  if (isNaN(parseInt(userID))) {
     if (attributesToUpdate) {
 
       // Assign empty objects if user or address parameters are missing
@@ -390,14 +391,14 @@ app.put('/edit_user/:userID', (req, res) => {
         // All data contained in the update objects is valid
         // Update user information using a transaction to provide rollback capabilities
         bookshelf.transaction(function(userUpdate) {
-          return User.forge({id: user_id})
+          return User.forge({id: userID})
           .save(userAttributesToUpdate, {
             transacting: userUpdate,
             method: 'update', 
             patch: true
           })
           .then(user => {
-            return UserAddress.where({'user_id': user_id})
+            return UserAddress.where({'user_id': userID})
             .save(userAddressAttributesToUpdate, {
               transacting: userUpdate,
               method: 'update', 
