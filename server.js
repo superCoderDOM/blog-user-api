@@ -80,21 +80,24 @@ app.listen(PORT, ()=>{
 // List ALL data related to ONE user
 app.get('/users', (req, res) => {
 
+  let userID = req.query.userID;
+
   // if url query parameter userID exists and is a number
-  if (req.query.userID) {
-    if (isNaN(parseInt(req.query.userID))) {
+  if (userID) {
+    if (isNaN(parseInt(userID))) {
       // Specified userID is invalid
       return res.status(400).json({msg: 'Specified userID is not a number'});
 
     } else {
       // Specified userID is valid
       // Fetch data for specified user
-      User.forge({id: req.query.userID})
+      User.forge({id: userID})
       .fetch({
         withRelated: ['userAddress', 'userRole', 'userBlogPosts']
       })
       .then(user => {
         if (user) {
+          // Fetched object is not empty
           user = user.toJSON();
           queryResult = {
             id: user.id,
@@ -112,6 +115,7 @@ app.get('/users', (req, res) => {
           };
           return res.status(200).json(queryResult);
         } else {
+          // Fetched object is empty
           return res.status(406).json({msg: 'User ID provided does not exist'});
         }
       })
@@ -129,6 +133,7 @@ app.get('/users', (req, res) => {
     })
     .then(users => {
       if (users) {
+        // Fetched object is not empty
         users = users.toJSON();
         queryResult = users.map(user => {
           return {
@@ -148,6 +153,7 @@ app.get('/users', (req, res) => {
         });
         return res.status(200).json(queryResult);
       } else {
+        // Fetched object is empty
         return res.status(406).json({msg: 'Weirdly enough, all users have disappeared!'});
       }
     })
@@ -172,56 +178,82 @@ app.get('/users', (req, res) => {
 +----------------------------------------------------------------------*/
 
 // List single blog post
-app.get('/blog_posts/:blogID', (req, res) => {
-  let blogID = 1; // = req.params.blogID;
-  BlogPost.where({'id': blogID}).fetch()
-  .then(blogPost => {
-    if(blogPost) {
-      blogPost = blogPost.attributes;
-      return res.status(200).json([blogPost]); // blog entry sent as array to match other endpoints
-    } else {
-      return res.status(406).json({msg: 'Blog ID provided does not exist'});
-    }
-  })
-  .catch(error => {
-    console.error(error);
-    return res.status(500).json(error);
-  });
-});
-
-// List all blog posts authored by specific user posts OR single post
-app.get('/blog_posts/:userID', (req, res) => {
-  let userID = req.params.userID; 
-  BlogPost.where({'author': userID}).fetchAll()
-  .then(blogPosts => {
-    if (blogPosts) {
-      blogPosts = blogPosts.models.map(blogPost => blogPost.attributes);
-      return res.status(200).json(blogPosts);
-    } else {
-      return res.status(406).json({msg: 'User ID provided does not exist'});
-    }
-  })
-  .catch(error => {
-    console.error(error);
-    return res.status(500).json(error);
-  });
-});
-
-// List all blog posts
 app.get('/blog_posts', (req, res) => {
-  BlogPost.fetchAll()
-  .then(blogPosts => {
-    if (blogPosts) {
-      blogPosts = blogPosts.models.map(blogPost => blogPost.attributes);
-      return res.status(200).json(blogPosts);
+  let userID = req.query.userID;
+  let blogID = req.query.blogID;
+
+  if (blogID) {
+    // A blogID is specified
+    if (isNaN(parseInt(blogID))) {
+      // Specified blogID is invalid
+      return res.status(400).json({msg: 'Specified blogID is not a number'});
+
     } else {
-      return res.status(406).json({msg: 'Weirdly enough, we could not find any blog posts!'});
+      // Specified blogID is valid
+      // Fetch single blog post
+      BlogPost.where({'id': blogID}).fetch()
+      .then(blogPost => {
+        if(blogPost) {
+           // Fetched object is not empty
+           blogPost = blogPost.attributes;
+          return res.status(200).json([blogPost]); // blog entry sent as array to match other endpoints
+        } else {
+          // Fetched object is empty
+          return res.status(406).json({msg: 'Blog ID provided does not exist'});
+        }
+      })
+      .catch(error => {
+        console.error(error);
+        return res.status(500).json(error);
+      });
     }
-  })
-  .catch(error => {
-    console.error(error);
-    return res.status(500).json(error);
-  });
+
+  } else if (userID) {
+    // A userID is specified
+    if (isNaN(parseInt(userID))) {
+      // Specified userID is invalid
+      return res.status(400).json({msg: 'Specified userID is not a number'});
+
+    } else {
+      // Specified userID is valid
+      // List all blog posts authored by specific user posts
+      let userID = req.params.userID; 
+      BlogPost.where({'author': userID}).fetchAll()
+      .then(blogPosts => {
+        if (blogPosts) {
+          // Fetched object is not empty
+          blogPosts = blogPosts.models.map(blogPost => blogPost.attributes);
+          return res.status(200).json(blogPosts);
+        } else {
+          // Fetched object is empty
+          return res.status(406).json({msg: 'User ID provided does not exist'});
+        }
+      })
+      .catch(error => {
+        console.error(error);
+        return res.status(500).json(error);
+      });
+    }
+
+  } else {
+    // No blogID or userID specified
+    // List all blog posts
+    BlogPost.fetchAll()
+    .then(blogPosts => {
+      if (blogPosts) {
+          // Fetched object is not empty        
+        blogPosts = blogPosts.models.map(blogPost => blogPost.attributes);
+        return res.status(200).json(blogPosts);
+      } else {
+          // Fetched object is empty
+          return res.status(406).json({msg: 'Weirdly enough, we could not find any blog posts!'});
+      }
+    })
+    .catch(error => {
+      console.error(error);
+      return res.status(500).json(error);
+    });
+  }
 });
 
 /*============================================
