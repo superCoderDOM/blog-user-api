@@ -132,7 +132,7 @@ app.get('/users', (req, res) => {
       withRelated: ['userAddress', 'userRole', 'userBlogPosts']
     })
     .then(users => {
-      if (users) {
+      if (users.length > 0) {
         // Fetched object is not empty
         users = users.toJSON();
         queryResult = users.map(user => {
@@ -196,10 +196,16 @@ app.get('/blog_posts', (req, res) => {
         if(blogPost) {
            // Fetched object is not empty
            blogPost = blogPost.attributes;
+           // In cases where both blogID and userID are specified
+           // Check that userID matches Blog Author ID
+           if (userID && userID !== blogPost.author) {
+              // Specified userID does not match blog author ID
+              return res.status(400).json({msg: 'User ID provided does not match Blog Author ID'});
+           }
           return res.status(200).json([blogPost]); // blog entry sent as array to match other endpoints
         } else {
           // Fetched object is empty
-          return res.status(406).json({msg: 'Blog ID provided does not exist'});
+          return res.status(400).json({msg: 'Blog ID provided does not exist'});
         }
       })
       .catch(error => {
@@ -217,16 +223,16 @@ app.get('/blog_posts', (req, res) => {
     } else {
       // Specified userID is valid
       // List all blog posts authored by specific user posts
-      let userID = req.params.userID; 
       BlogPost.where({'author': userID}).fetchAll()
       .then(blogPosts => {
-        if (blogPosts) {
+        if (blogPosts.length > 0) {
+          console.log(blogPosts);
           // Fetched object is not empty
           blogPosts = blogPosts.models.map(blogPost => blogPost.attributes);
           return res.status(200).json(blogPosts);
         } else {
           // Fetched object is empty
-          return res.status(406).json({msg: 'User ID provided does not exist'});
+          return res.status(406).json({msg: 'User ID provided does not have any blog posts'});
         }
       })
       .catch(error => {
@@ -240,7 +246,7 @@ app.get('/blog_posts', (req, res) => {
     // List all blog posts
     BlogPost.fetchAll()
     .then(blogPosts => {
-      if (blogPosts) {
+      if (blogPosts.length > 0) {
           // Fetched object is not empty        
         blogPosts = blogPosts.models.map(blogPost => blogPost.attributes);
         return res.status(200).json(blogPosts);
@@ -273,8 +279,8 @@ app.get('/blog_posts', (req, res) => {
 
 app.post('/create_blog_post', (req, res) => {
 
-  // Data validation
-  let newBlogPost = req.params.newBlogPost;
+  // Blog data validation
+  let newBlogPost = req.body.newBlogPost;
   if (newBlogPost) {
     if (newBlogPost.author && !isNaN(parseInt(newBlogPost.author))) {
       if (newBlogPost.title && newBlogPost.title.length <= 255) {
