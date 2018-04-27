@@ -2,7 +2,6 @@
 const express   = require('express'),
       app       = express(),
       PORT      = process.env.PORT || 8080;
-const moment = require('moment');
 
 // Middleware registration
 app.use(express.json());
@@ -25,6 +24,7 @@ const bookshelf = require('bookshelf')(knex);
 
 // Define Models and table relationships
 const BlogPost = bookshelf.Model.extend({
+  hasTimestamps: true,
   tableName: 'blog_posts',
   author: function() {
     return this.belongsTo(User, 'author');
@@ -289,10 +289,6 @@ app.post('/create_blog_post', (req, res) => {
     if (newBlogPost.author && !isNaN(parseInt(newBlogPost.author))) {
       if (newBlogPost.title && newBlogPost.title.length <= 255) {
         if (newBlogPost.content) {
-
-          // If all data provided is valid, set timestamps
-          newBlogPost.created_at = `${moment().format('YYYY-MM-DD HH:mm:ss')}`;
-          newBlogPost.updated_at = `${moment().format('YYYY-MM-DD HH:mm:ss')}`;
         
           // Create new record
           new BlogPost(newBlogPost).save()
