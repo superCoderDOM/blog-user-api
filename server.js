@@ -79,7 +79,7 @@ app.listen(PORT, ()=>{
 
 // List ALL data related to ONE user
 app.get('/users', (req, res) => {
-
+  console.log(req.query, req.query.length);
   let userID = req.query.userID;
 
   // if url query parameter userID exists and is a number
@@ -124,6 +124,10 @@ app.get('/users', (req, res) => {
         return res.status(500).json(error);
       });
     }
+
+  } else if (Object.keys(req.query).length > 0) {
+    // No userID specified BUT another parameter is present
+    return res.status(400).json({msg: 'The url query parameter specified is invalid'});
 
   } else {
     // No userID specified
@@ -241,6 +245,10 @@ app.get('/blog_posts', (req, res) => {
         return res.status(500).json(error);
       });
     }
+
+  } else if (Object.keys(req.query).length > 0) {
+    // No blogID or userID specified BUT another parameter is present
+    return res.status(400).json({msg: 'The url query parameter specified is invalid'});
 
   } else {
     // No blogID or userID specified
