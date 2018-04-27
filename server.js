@@ -78,72 +78,84 @@ app.listen(PORT, ()=>{
 +----------------------------------------------------------------------*/
 
 // List ALL data related to ONE user
-app.get('/users/:userID', (req, res) => {
-  User.forge({id: req.params.userID})
-  .fetch({
-    withRelated: ['userAddress', 'userRole', 'userBlogPosts']
-  })
-  .then(user => {
-    if (user) {
-      user = user.toJSON();
-      queryResult = {
-        id: user.id,
-        username: user.username,
-        email: user.email,
-        address: {
-          address: user.userAddress.address,
-          city: user.userAddress.city,
-          province: user.userAddress.province,
-          postal_code: user.userAddress.postal_code,
-          country: user.userAddress.country,
-        },
-        role: user.userRole.label,
-        posts: user.userBlogPosts.length,
-      };
-      return res.status(200).json(queryResult);
-    } else {
-      return res.status(406).json({msg: 'User ID provided does not exist'});
-    }
-  })
-  .catch(error => {
-    console.error(error);
-    return res.status(500).json(error);
-  });
-});
-
-// List ALL data related to EVERY users
 app.get('/users', (req, res) => {
-  User.fetchAll({
-    withRelated: ['userAddress', 'userRole', 'userBlogPosts']
-  })
-  .then(users => {
-    if (users) {
-      users = users.toJSON();
-      queryResult = users.map(user => {
-        return {
-          id: user.id,
-          username: user.username,
-          email: user.email,
-          address: {
-            address: user.userAddress.address,
-            city: user.userAddress.city,
-            province: user.userAddress.province,
-            postal_code: user.userAddress.postal_code,
-            country: user.userAddress.country,
-          },
-          role: user.userRole.label,
-          posts: user.userBlogPosts.length,
-        };
-      });
-      return res.status(200).json(queryResult);
+
+  // if url query parameter userID exists and is a number
+  if (req.query.userID) {
+    if (isNaN(parseInt(req.query.userID))) {
+      // Specified userID is invalid
+      return res.status(400).json({msg: 'Specified userID is not a number'});
+
     } else {
-      return res.status(406).json({msg: 'Weirdly enough, all users have disappeared!'});
+      // Specified userID is valid
+      // Fetch data for specified user
+      User.forge({id: req.query.userID})
+      .fetch({
+        withRelated: ['userAddress', 'userRole', 'userBlogPosts']
+      })
+      .then(user => {
+        if (user) {
+          user = user.toJSON();
+          queryResult = {
+            id: user.id,
+            username: user.username,
+            email: user.email,
+            address: {
+              address: user.userAddress.address,
+              city: user.userAddress.city,
+              province: user.userAddress.province,
+              postal_code: user.userAddress.postal_code,
+              country: user.userAddress.country,
+            },
+            role: user.userRole.label,
+            posts: user.userBlogPosts.length,
+          };
+          return res.status(200).json(queryResult);
+        } else {
+          return res.status(406).json({msg: 'User ID provided does not exist'});
+        }
+      })
+      .catch(error => {
+        console.error(error);
+        return res.status(500).json(error);
+      });
     }
-  })
-  .catch(error => {
-    console.error(error);
-    return res.status(500).json(error);
-  });
+
+  } else {
+    // No userID specified
+    // Fetch data related to EVERY users
+    User.fetchAll({
+      withRelated: ['userAddress', 'userRole', 'userBlogPosts']
+    })
+    .then(users => {
+      if (users) {
+        users = users.toJSON();
+        queryResult = users.map(user => {
+          return {
+            id: user.id,
+            username: user.username,
+            email: user.email,
+            address: {
+              address: user.userAddress.address,
+              city: user.userAddress.city,
+              province: user.userAddress.province,
+              postal_code: user.userAddress.postal_code,
+              country: user.userAddress.country,
+            },
+            role: user.userRole.label,
+            posts: user.userBlogPosts.length,
+          };
+        });
+        return res.status(200).json(queryResult);
+      } else {
+        return res.status(406).json({msg: 'Weirdly enough, all users have disappeared!'});
+      }
+    })
+    .catch(error => {
+      console.error(error);
+      return res.status(500).json(error);
+    });
+  }
 });
 
 /*=========================================
@@ -373,5 +385,4 @@ app.put('/edit_user/:userID', (req, res) => {
     // User ID provided as request parameter is invalid
     return res.status(400).json({msg: 'User ID provided is not an integer'});
   }
-
 });
