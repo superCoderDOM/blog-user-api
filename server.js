@@ -83,7 +83,7 @@ app.get('/users', (req, res) => {
   let userID = req.query.userID;
 
   // if url query parameter userID exists and is a number
-  if (userID) {
+  if (userID && Object.keys(req.query).length === 1) {
     if (isNaN(parseInt(userID))) {
       // Specified userID is invalid
       return res.status(400).json({msg: 'Specified userID is not a number'});
@@ -187,7 +187,7 @@ app.get('/blog_posts', (req, res) => {
   let userID = req.query.userID;
   let blogID = req.query.blogID;
 
-  if (blogID) {
+  if (blogID && Object.keys(req.query).length === 1) {
     // Only a blogID is specified
     if (isNaN(parseInt(blogID))) {
       // Specified blogID is invalid
@@ -198,7 +198,7 @@ app.get('/blog_posts', (req, res) => {
       // Fetch single blog post
       BlogPost.where({'id': blogID}).fetch()
       .then(blogPost => {
-        if(blogPost && Object.keys(req.query).length === 1) {
+        if(blogPost) {
            // Fetched object is not empty
            blogPost = blogPost.attributes;
           return res.status(200).json([blogPost]); // blog entry sent as array to match other endpoints
