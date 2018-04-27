@@ -302,7 +302,7 @@ app.post('/create_blog_post', (req, res) => {
       .then(user => {
         if (!user){
           // If userRole is empty, the user role id provided does not exist
-          return res.status(400).json({message: 'Specified User ID does not exist'});
+          return res.status(400).json({message: 'Specified Author ID does not exist'});
         } else {
           // Validate blog post title
           if (newBlogPost.title && typeof newBlogPost.title === "string" && newBlogPost.title.length <= 255) {
