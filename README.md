@@ -10,10 +10,10 @@ The API endpoints are build to interact with ecords contained in tables defined 
 
 It provides the following endpoint:
 
-[`/users`](#retrieve-list-of-user-details) - Use this endpoint to retrieve user details
-[`/blog_posts`](#retrieve-list-of-blog-post-details) - Use this endpoint to retrieve blog post details
-[`/create_blog_post`](#create-a-new-blog-post) - Use this endpoint to create a new blog post entry
-[`/edit_user`](#update-user-details) - Use this endpoint to edit user details
+[```/users```](#retrieve-list-of-user-details) - Use this endpoint to retrieve user details
+[```/blog_posts```](#retrieve-list-of-blog-post-details) - Use this endpoint to retrieve blog post details
+[```/create_blog_post```](#create-a-new-blog-post) - Use this endpoint to create a new blog post entry
+[```/edit_user```](#update-user-details) - Use this endpoint to edit user details
 
 ## Endpoint Documentation
 
