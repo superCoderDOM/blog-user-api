@@ -79,14 +79,14 @@ app.listen(PORT, ()=>{
 
 // List ALL data related to ONE user
 app.get('/users', (req, res) => {
-  console.log(req.query, req.query.length);
+
   let userID = req.query.userID;
 
   // if url query parameter userID exists and is a number
   if (userID && Object.keys(req.query).length === 1) {
     if (isNaN(parseInt(userID))) {
       // Specified userID is invalid
-      return res.status(400).json({msg: 'Specified userID is not a number'});
+      return res.status(400).json({message: 'Specified userID is not a number'});
 
     } else {
       // Specified userID is valid
@@ -116,7 +116,7 @@ app.get('/users', (req, res) => {
           return res.status(200).json([userDetails]);
         } else {
           // Fetched object is empty
-          return res.status(204).json({msg: 'User ID provided does not exist'});
+          return res.status(204).json({message: 'User ID provided does not exist'});
         }
       })
       .catch(error => {
@@ -127,7 +127,7 @@ app.get('/users', (req, res) => {
 
   } else if (Object.keys(req.query).length > 0) {
     // No userID specified BUT another parameter is present
-    return res.status(400).json({msg: 'The url query parameter specified is invalid'});
+    return res.status(400).json({message: 'The url query parameter specified is invalid'});
 
   } else {
     // No userID specified
@@ -158,7 +158,7 @@ app.get('/users', (req, res) => {
         return res.status(200).json(usersDetails);
       } else {
         // Fetched object is empty
-        return res.status(204).json({msg: 'Weirdly enough, all users have disappeared!'});
+        return res.status(204).json({message: 'Weirdly enough, all users have disappeared!'});
       }
     })
     .catch(error => {
@@ -191,7 +191,7 @@ app.get('/blog_posts', (req, res) => {
     // Only a blogID is specified
     if (isNaN(parseInt(blogID))) {
       // Specified blogID is invalid
-      return res.status(400).json({msg: 'Specified blogID is not a number'});
+      return res.status(400).json({message: 'Specified blogID is not a number'});
 
     } else {
       // Specified blogID is valid
@@ -204,7 +204,7 @@ app.get('/blog_posts', (req, res) => {
           return res.status(200).json([blogPost]); // blog entry sent as array to match other endpoints
         } else {
           // Fetched object is empty
-          return res.status(400).json({msg: 'Blog ID provided does not exist'});
+          return res.status(400).json({message: 'Blog ID provided does not exist'});
         }
       })
       .catch(error => {
@@ -217,7 +217,7 @@ app.get('/blog_posts', (req, res) => {
     // Only a userID is specified
     if (isNaN(parseInt(userID))) {
       // Specified userID is invalid
-      return res.status(400).json({msg: 'Specified userID is not a number'});
+      return res.status(400).json({message: 'Specified userID is not a number'});
 
     } else {
       // Specified userID is valid
@@ -231,7 +231,7 @@ app.get('/blog_posts', (req, res) => {
           return res.status(200).json(blogPosts);
         } else {
           // Fetched object is empty
-          return res.status(204).json({msg: 'User ID provided does not have any blog posts'});
+          return res.status(204).json({message: 'User ID provided does not have any blog posts'});
         }
       })
       .catch(error => {
@@ -243,7 +243,7 @@ app.get('/blog_posts', (req, res) => {
   } else if (Object.keys(req.query).length > 0) {
     // No blogID or userID specified BUT another parameter is present
     // OR multiple parameters are present
-    return res.status(400).json({msg: 'The url query parameter specified is invalid'});
+    return res.status(400).json({message: 'The url query parameter specified is invalid'});
 
   } else {
     // No blogID or userID specified
@@ -256,7 +256,7 @@ app.get('/blog_posts', (req, res) => {
         return res.status(200).json(blogPosts);
       } else {
           // Fetched object is empty
-          return res.status(204).json({msg: 'Weirdly enough, we could not find any blog posts!'});
+          return res.status(204).json({message: 'Weirdly enough, we could not find any blog posts!'});
       }
     })
     .catch(error => {
@@ -276,19 +276,34 @@ app.get('/blog_posts', (req, res) => {
       author: Integer
       title: 'String'
       content: 'String'
-    * 'id' field for new entry handled automatically by database
-    * 'created_at' AND 'updated_at' fields handled automatically by this API
+    * 'created_at' field handled automatically by the database
+    * 'updated_at' field handled automatically by the database
+    * 'id' field handled automatically by the database
 +-----------------------------------------------------------------------------*/
 
 app.post('/create_blog_post', (req, res) => {
-  
-  let newBlogPost = req.body;
-  
+
   // Blog data validation
-  if (newBlogPost) {
+  if (req.body) {
+    // Data is present in the request body
+    // Create object containing required fields to create blog posts
+    // All other fields provided will be ignored
+    let newBlogPost = {
+      author: req.body.author,
+      title: req.body.title,
+      content: req.body.content,
+    };
+
+    // Validate user ID
     if (newBlogPost.author && !isNaN(parseInt(newBlogPost.author))) {
-      if (newBlogPost.title && newBlogPost.title.length <= 255) {
-        if (newBlogPost.content) {
+
+      // CHECK USERID EXISTS
+
+      // Validate blog post title
+      if (newBlogPost.title && typeof newBlogPost.title === "string" && newBlogPost.title.length <= 255) {
+
+        // Validate blog post content
+        if (newBlogPost.content && typeof newBlogPost.title === "string") {
         
           // Create new record
           new BlogPost(newBlogPost).save()
@@ -301,19 +316,19 @@ app.post('/create_blog_post', (req, res) => {
           });
         } else {
           // Blog content field is missing
-          return res.status(400).json({msg: 'Blog Post Content is empty'});
+          return res.status(400).json({message: 'Blog Post Content is not a string or is empty'});
         }
       } else {
         // Blog title field is invalid
-        return res.status(400).json({msg: 'Blog Post Title either missing or longer than 255 characters'});
+        return res.status(400).json({message: 'Blog Post Title either missing or not a string less than 255 characters'});
       }
     } else {
       // Author ID provided as parameter is invalid
-      return res.status(400).json({msg: 'Blog Post Author ID is either missing or not a number'});
+      return res.status(400).json({message: 'Blog Post Author ID is either missing or not a number'});
     }
   } else {
     // Request body attribute object required to create new post is missing
-    return res.status(400).json({msg: 'newBlogPost Object is missing'});
+    return res.status(400).json({message: 'Request body object is missing'});
   }
 });
 
@@ -325,103 +340,158 @@ app.post('/create_blog_post', (req, res) => {
   Function: Update user details, including their role and address
   Params: urlencoded/JSON request body {Object} with following key pairs
       userID: Int
-      user: {Object}
-        user_roles_id: Integer,
-        username: 'String',
-        email: 'String',
-      address: {Object}
-        address: 'String',
-        city: 'String',
-        province: 'String',
-        postal_code: 'String',
-        country: 'String',
+      user_roles_id: Integer,
+      username: 'String',
+      email: 'String',
+      address: 'String',
+      city: 'String',
+      province: 'String',
+      postal_code: 'String',
+      country: 'String',
 +-----------------------------------------------------------------*/
 
 app.put('/edit_user', (req, res) => {
 
-  // RegEx used in type='email' from W3C 
+  // RegEx used in type='email' by W3C 
   const emailTemplate = new RegExp('^[a-zA-Z0-9.!#$%&’*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$');
 
   // Data validation
   if (req.body) {
 
-    // Assign empty objects if user or address parameters are missing
+    // Initialize update required parameters
     let userID = req.body.userID;
-    let userUpdate = req.body.user || {};
-    let addressUpdate = req.body.address || {};
+    let userUpdate = {}, addressUpdate = {};
 
     // Validate userID
     if (!isNaN(parseInt(userID))) {
-      // Validate user object content
-      if (userUpdate.user_roles_id && isNaN(parseInt(userUpdate.user_roles_id))) {
-        // User role ID provided as parameter is invalid
-        return res.status(400).json({msg: 'User Role ID provided is not a number'});
 
-      } else if (userUpdate.username && userUpdate.username.length > 255) {
-        // Username provided as parameter is too long
-        return res.status(400).json({msg: 'Username provided is over 255 characters'});
+      // CHECK USERID EXISTS
 
-      } else if (userUpdate.email && 
-          userUpdate.email.length > 255 && 
-          emailTemplate.test(userUpdate.email)) {
-        // Email provided as parameter is invalid
-        return res.status(400).json({msg: 'email provided is too long or of improper format'});
+      // Build userUpdate object and validate content
 
-      } else if (addressUpdate.address && addressUpdate.address.length > 255) {
-        // Address provided as parameter is too long
-        return res.status(400).json({msg: 'Street Address provided is over 255 characters'});
+      // Validate user role id
+      if (req.body.user_roles_id) {
+        if (isNaN(parseInt(req.body.user_roles_id))) {
+          // User role ID provided as parameter is invalid
+          return res.status(400).json({message: 'User Role ID provided is not a number'});
+        } else {
+        // Add check that user role id is valid database entry
+        // Valid user role id
+        userUpdate.user_roles_id = req.body.user_roles_id;
+        }
+      }
+      // Validate username
+      if (req.body.username) {
+        if (typeof req.body.username !== "string" || req.body.username.length > 255) {
+          // Username provided as parameter is too long
+          return res.status(400).json({message: 'Username must be a string less than 255 characters'});
+        } else {
+        // Valid username is provided
+        userUpdate.username = req.body.username;
+        }
+      } 
+      // Validate email
+      if (req.body.email) {
+        if (typeof req.body.email !== "string" || req.body.email.length > 255) {
+          // Email provided as parameter is too long for database
+          return res.status(400).json({message: 'Email must be a string less than 255 characters'});
+        } else if (!emailTemplate.test(req.body.email)) {
+          // Email provided as parameter is not a valid email address
+          return res.status(400).json({message: 'Email provided is of improper format'});
+        } else {
+        // Valid email is provided
+        userUpdate.email = req.body.email;
+        }
+      } 
 
-      } else if (addressUpdate.city && addressUpdate.city.length > 255) {
-        // City provided as parameter is too long
-        return res.status(400).json({msg: 'City name provided is over 255 characters'});
+      // Build addressUpdate object and validate content
 
-      } else if (addressUpdate.province && addressUpdate.province.length > 255) {
-        // Province provided as parameter is too long
-        return res.status(400).json({msg: 'Province name provided is over 255 characters'});
-
-      } else if (addressUpdate.postal_code && addressUpdate.postal_code.length > 255) {
-        // Postal code provided as parameter is too long
-        return res.status(400).json({msg: 'Postal Code provided is over 255 characters'});
-
-      } else if (addressUpdate.country && addressUpdate.country.length > 255) {
-        // Country provided as parameter is too long
-        return res.status(400).json({msg: 'Country name provided is over 255 characters'});
-
-      } else {
-        // All data contained in the update objects is valid
-        // Update user information using a transaction to provide rollback capabilities
-        bookshelf.transaction(function(updateUser) {
-          return User.forge({id: userID})
-          .save(userUpdate, {
+      // Validate street address
+      if (req.body.address) {
+        if (typeof req.body.address !== "string" || req.body.address.length > 255) {
+          // Address provided as parameter is too long
+          return res.status(400).json({message: 'Street address must be a string less than 255 characters'});
+        } else {
+          // Valid street address is provided
+          addressUpdate.address = req.body.address;
+        }
+      }
+      // Validate city
+      if (req.body.city) {
+        if (typeof req.body.city !== "string" || req.body.city.length > 255) {
+          // City provided as parameter is not a string with less than 255 character
+          return res.status(400).json({message: 'City name must be a string less than 255 characters'});
+        } else {
+          // Valid city is provided
+          addressUpdate.city = req.body.city;
+        }
+      }
+      // Validate province
+      if (req.body.province) {
+        if (typeof req.body.province !== "string" || req.body.province.length > 255) {
+          // Province provided as parameter is too long
+          return res.status(400).json({message: 'Province name must be a string less than 255 characters'});
+        } else {
+          // Valid province is provided
+          addressUpdate.province = req.body.province;
+        }
+      } 
+      // Validate postal code
+      if (req.body.postal_code) {
+        if (typeof req.body.postal_code !== "string" || req.body.postal_code.length > 255) {
+          // Postal code provided as parameter is too long
+          return res.status(400).json({message: 'Postal Code must be a string less than 255 characters'});
+        } else {
+          // Valid postal code is provided
+          addressUpdate.postal_code = req.body.postal_code;
+        }
+      }
+      // Validate country
+      if (req.body.country) {
+        if (typeof req.body.country !== "string" || req.body.country.length > 255) {
+          // Country provided as parameter is too long
+          return res.status(400).json({message: 'Country name must be a string less than 255 characters'});
+        } else {
+          // Valid country is provided
+          addressUpdate.country = req.body.country;
+        }
+      }
+      
+      // All data contained in the update objects is valid
+      // Update user information using a transaction to provide rollback capabilities
+      bookshelf.transaction(function(updateUser) {
+        return User.forge({id: userID})
+        .save(userUpdate, {
+          transacting: updateUser,
+          method: 'update', 
+          patch: true
+        })
+        .then(user => {
+          return UserAddress.where({'user_id': userID})
+          .save(addressUpdate, {
             transacting: updateUser,
             method: 'update', 
             patch: true
           })
-          .then(user => {
-            return UserAddress.where({'user_id': userID})
-            .save(addressUpdate, {
-              transacting: updateUser,
-              method: 'update', 
-              patch: true
-            })
-            .then(newAddress => {
-              updatedUser = user.attributes;
-              updatedUser.address = newAddress.attributes;
-              return res.status(200).json(updatedUser);
-            })
+          .then(newAddress => {
+            updatedUser = user.attributes;
+            updatedUser.address = newAddress.attributes;
+            return res.status(200).json(updatedUser);
           })
         })
-        .catch(error => {
-          console.error(error);
-          return res.status(500).json(error);
-        });
-      }
+      })
+      .catch(error => {
+        console.error(error);
+        return res.status(500).json(error);
+      });
+
     } else {
       // User ID provided as request parameter is invalid
-      return res.status(400).json({msg: 'User ID provided is not an integer'});
+      return res.status(400).json({message: 'User ID provided is not an integer'});
     }
+
   } else {
     // Request body attribute object required for update is missing
-    return res.status(400).json({msg: 'Request body object is missing'});
+    return res.status(400).json({message: 'Request body object is missing'});
   }
 });
