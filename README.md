@@ -4,9 +4,9 @@ Designed by Dominic Lacroix for Iversoft coding challenge.
 
 ## Specifications
 
-API implementation performed using a community edition of [MYSQL](https://www.mysql.com/) database and a [Node.js](https://nodejs.org/en/) technology stack ([knex](http://knexjs.org/)/[bookshelf](http://bookshelfjs.org/)/[express](http://expressjs.com/)).
+API implementation performed using a community edition of [MySQL](https://www.mysql.com/) database and a [Node.js](https://nodejs.org/en/) technology stack ([knex](http://knexjs.org/)/[bookshelf](http://bookshelfjs.org/)/[express](http://expressjs.com/)).
 
-The API endpoints are build to interact with ecords contained in tables defined in the DB schema [test_db_2017-05-24.sql](./test_db_2017-05-24.sql).
+The API endpoints are build to interact with records contained in tables defined in the DB schema [test_db_2017-05-24.sql](./test_db_2017-05-24.sql).
 
 It provides the following endpoint:
 
@@ -22,7 +22,7 @@ It provides the following endpoint:
 
 ### Retrieve List of User Details
 
-The `/users` endpoint provides a list of details associated with all users contained in the database. The list inlcudes each users id, username, email address, their role, address, and how many blog posts they have authored. This endpoint can optionally be passed user ID to obtain a list containing only the information pertaining to the specified user.
+The `/users` endpoint provides a list of details associated with all users contained in the database. The list inlcudes each users id, username, email address, their role, address, and how many blog posts they have authored. This endpoint can optionally be passed a user ID to obtain a list containing only the information pertaining to the specified user.
 
 When called, this endpoint performs a task returning results equivalent to invoking the following SQL query: 
 
@@ -48,14 +48,16 @@ AND users.id = [value];
 #### Request Parameters
 
 URL format for this enpoint:
-```/users```
-```/users?userID=[value]```
 
-This endpoint can be reached with and without parameters. When no parameters are provided, the response will include a list of details associated with all users present in the database. When a **userID** query parameter is present at the end of the url, the response will include only the details associated with the specified user. If a parameter other than userID is provided or if the value attached to userID is not a number, the request will fail with a status code of `400`.
+`/users`
+
+`/users?userID=[value]`
+
+This endpoint can be reached with and without parameters. When no parameters are provided, the response will include a list of details associated with all users present in the database. When a **userID** query parameter is present at the end of the url, the response will include only the details associated with the specified user, assuming it exists. If a parameter other than userID is provided or if the value attached to userID is not a number, the request will fail with a status code of `400`.
 
 #### Response Format
 
-Upon a successful request with status code 200, a JSON object containing the requested list is returned in the response. Requests for ALL and SINGLE user details are both returned as an array. In the single case, the array contains only one user detail object.
+Upon a successful request with status code 200, a JSON object containing the requested list is returned in the response. Requests for ALL and SINGLE user details are both returned as an array. In the single case, the array contains only one user details object.
 
 The JSON response object returned by this endpoint takes the following form:
 
@@ -117,17 +119,20 @@ OR blog_posts.author = [value];
 #### Request Parameters
 
 URL format for this enpoint:
-```/blog_posts```
-```/blog_posts?userID=[value]```
-```/blog_posts?blogID=[value]```
+
+`/blog_posts`
+
+`/blog_posts?userID=[value]`
+
+`/blog_posts?blogID=[value]`
 
 This endpoint can be reached with and without parameters. When no parameters are provided, the response will include a list of details associated with all blog posts present in the database. When a **userID** query parameter is present at the end of the url, the response will include only the details of the blog posts authored by the specified user. When a **blogID** query parameter is included at the end of the url, the respose will include only the details of the specified blog post.
 
-Only *blogID* and *userID* are recognized as valid query parameters for this endpoint and their value MUST be a number. If a parameter other than userID and blogID is provided, the request will fail with a status code of `400`. In addition, requests only accept a single query parameter, so blogID and userID cannot be used together or the request will also fail with a status code of `400`.
+Only *blogID* and *userID* are recognized as valid query parameters for this endpoint and their value MUST be a number. If a parameter other than userID and blogID is provided, the request will fail with a status code of `400`. In addition, the API only accepts only requests with a single query parameter, so blogID and userID cannot be used together or the request will also fail with a status code of `400`.
 
 #### Response Format
 
-Upon a successful request with status code 200, a JSON object containing the requested list is returned in the response. Requests for ALL blog posts, SINGLE USER blog posts, and SINGLE blog post are all returned as an array. In the single blog post case and in cases where only a single post is fetched, the array will contain a single blog post detail object.
+Upon a successful request with status code 200, a JSON object containing the requested list is returned in the response. Requests for ALL blog posts, SINGLE USER blog posts, and SINGLE blog post are all returned as an array. In the single blog post case and in cases where only a single post is fetched, the array will contain a single blog post details object.
 
 The JSON response object returned by this endpoint takes the following form:
 
@@ -167,11 +172,12 @@ The `/create_blog_post` endpoint handles the creation of new blog post records. 
 #### Request Parameters
 
 URL format for this enpoint:
-```/create_blog_post```
+
+`/create_blog_post`
 
 A request body object must be present to provide the necessary information required to create a new blog post record. Although the database allows for empty fields to be present in blog post records, the API requires that an author id, a title, and content be provided in the request body object.
 
-The JSON request body object MUST contain all the following fields:
+The JSON request body object MUST contain ALL the following fields:
 
 ```json
 {
@@ -201,6 +207,7 @@ The JSON response object returned by this endpoint takes the following form:
     "id": 15
 }
 ```
+
 The API also provides responses to malformed requests, status code `400` (Bad Request), and internal errors, status code `500` (Internal Server Error). In all cases where the request could not be completed, the status code is sent along with a JSON object conatining a message providing more information on the problem. This object takes the following form:
 
 ```json
@@ -214,11 +221,12 @@ The `/edit_user` endpoint handles the update of user details, including their ro
 #### Request Parameters
 
 URL format for this enpoint:
-```/edit_user```
 
-A request body object must be present to provide the necessary information required to update user details. Only the **userID** parameter is required in order to access the proper records. All other parameters are optional and only need to be updated. If a parameter is provided and include the same information already present in the database, no visible changes will occur.
+`/edit_user`
 
-The JSON request body object must contain the userID and any of the following fields:
+A request body object must be present to provide the necessary information required to update user details. Only the **userID** parameter is required in order to access the proper records. All other parameters are optional and only need to be updated. If a parameter is provided that includes the same information already present in the database, no visible changes will occur.
+
+The JSON request body object MUST contain a userID pair and any of the following fields:
 
 ```json
 {
@@ -233,14 +241,14 @@ The JSON request body object must contain the userID and any of the following fi
     "country": "Canada",
 }
 ```
-The API will accept any other key pairs present in the request body object, but will silently ignore them. However, if any of the key pairs are omitted, the corresponding fields in the database will not be updated.
 
+The API will accept any other key pairs present in the request body object, but will silently ignore them. If any of the key pairs are omitted, the corresponding fields in the database will not be updated.
 
 #### Response Format
 
 Upon a successful request with status code 200, a JSON object containing the *updated details* of the user record is returned in the response. 
 
-The JSON response object returned by this endpoint takes the form presented below, but includes only the key-pairs provided in the update request. The updated address fields are grouped together into their own object to make explicit the changes affected a separate table.
+The JSON response object returned by this endpoint takes the form presented below, but includes only the key-pairs provided in the update request. The updated address fields are grouped together into their own object to make explicit that the changes occured in a separate table.
 
 ```json
 {
