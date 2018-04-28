@@ -4,7 +4,7 @@ The following paragraphs provide a description of any design decisions made that
 
 ## Technology Stack
 
-I elected to go with express/knex/bookshelf for the following reasons. *Express* is extremely versatile and easy to use for creating a variety of APIs. The syntax is easy to read and makes it clear what each function does. *Knex* allows the use javascript to create complex SQL queries and works with many SQL databases including MySQL, PostgresSQL, SQLite3, MSSQL, MariaDB, Oracle, and Amazon Redshift. So it is a highly versatile tool that also result in highly portable code as it requires minimal changes to allow code to be reused with another database system. *Bookshelf* is an ORM built on top of knex that is designed to work well with MySQL, PostgreSQL and SQLite3. It makes for very clean code, even when manipulating data using complex SQL queries especially when dealing with one-to-one and one-to-many relationships between tables. Overall, the resulting API is easy to understand and maintain, and can potentially be reused with little modifications with the database is ever migrated to a different system.
+I elected to go with an express/knex/bookshelf stack for the following reasons. *Express* is extremely versatile and easy to use for creating a variety of APIs. The syntax is easy to read and makes it clear what each function does. *Knex* allows the use javascript to create complex SQL queries and works with many SQL databases including MySQL, PostgresSQL, SQLite3, MSSQL, MariaDB, Oracle, and Amazon Redshift. So it is a highly versatile tool that also result in highly portable code as it requires minimal changes to allow code to be reused with another database system. *Bookshelf* is an ORM built on top of knex that is designed to work well with MySQL, PostgreSQL and SQLite3. It makes for very clean code, even when manipulating data using complex SQL queries especially when dealing with one-to-one and one-to-many relationships between tables. Overall, the resulting API is easy to understand and maintain, and can potentially be reused with little modifications with the database is ever migrated to a different system.
 
 ## User Details
 
@@ -16,4 +16,6 @@ Within the API, I have implemented validation checks on data types, format, and 
 
 ### Email Validation
 
-As a subset of data validation, I added a regex to test wether the email address provided when editing user details makes sense. Although more complex expressions exist, the once I chose is the one used by W3C.
+As a subset of data validation, I added a regex to test whether the email address provided when editing user details makes sense. Although more complex expressions exist, the once I chose is the one used by W3C.
+
+--- THE END ---
