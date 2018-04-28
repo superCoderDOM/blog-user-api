@@ -1,6 +1,6 @@
 # Express API
 
-Designed by Dominic Lacroix for Iversoft coding challenge.
+Coded by Dominic Lacroix for Iversoft coding challenge.
 
 ## Specifications
 
@@ -14,7 +14,7 @@ It provides the following endpoint:
 
 [`/blog_posts`](#retrieve-list-of-blog-post-details) - Use this endpoint to retrieve blog post details
 
-[`/create_blog_post`](#create-a-new-blog-post) - Use this endpoint to create a new blog post entry
+[`/create_blog_post`](#create-a-new-blog-post) - Use this endpoint to create a new blog post
 
 [`/edit_user`](#update-user-details) - Use this endpoint to edit user details
 
@@ -22,22 +22,36 @@ It provides the following endpoint:
 
 ### Retrieve List of User Details
 
-The `/users` endpoint provides a list of details associated with all users contained in the database. The list inlcudes each users id, username, email address, their role, address, and how many blog posts they have authored. This endpoint can optionally be passed a user ID to obtain a list containing only the information pertaining to the specified user.
+The `/users` endpoint provides a list of details associated with all users contained in the database. The list inlcudes each users id, username, email address, their role, mailing address, and how many blog posts they have authored. This endpoint can optionally be passed a user ID to obtain a list containing only the information pertaining to the specified user.
 
 When called, this endpoint performs a task returning results equivalent to invoking the following SQL query: 
 
 ```sql
-SELECT users.id, users.username, users.email, 
-CONCAT(user_addresses.address, ", ", user_addresses.city, ", ", user_addresses.province, " ", user_addresses.postal_code, ", ", user_addresses.country)
-AS address, label AS role, user_posts.blog_posts
-FROM `database`.users, `database`.user_roles, `database`.user_addresses, (
-    SELECT users.id, 
-    COUNT(blog_posts.author) AS blog_posts 
-    FROM `database`.users 
-    LEFT JOIN `database`.blog_posts 
-    ON users.id = blog_posts.author 
-    GROUP BY users.id ASC
-) AS user_posts
+SELECT 
+    users.id, 
+    users.username, 
+    users.email, 
+    CONCAT(
+        user_addresses.address, ", ", 
+        user_addresses.city, ", ", 
+        user_addresses.province, " ", 
+        user_addresses.postal_code, ", ", 
+        user_addresses.country
+    ) AS address,
+    label AS role, 
+    user_posts.blog_posts
+FROM 
+    `database`.users, 
+    `database`.user_roles, 
+    `database`.user_addresses, 
+    (
+        SELECT users.id, 
+        COUNT(blog_posts.author) AS blog_posts 
+        FROM `database`.users 
+        LEFT JOIN `database`.blog_posts 
+        ON users.id = blog_posts.author 
+        GROUP BY users.id ASC
+    ) AS user_posts
 WHERE users.user_roles_id = user_roles.id 
 AND users.id = user_addresses.user_id
 AND users.id = user_posts.id
@@ -165,7 +179,7 @@ In all cases where no data was fetched (no content, bad request, internal error)
 { "message": "Message containing information related to the particular problem encountered"}
 ``` 
 
-### Create A New Blog Post
+### Create a New Blog Post
 
 The `/create_blog_post` endpoint handles the creation of new blog post records. It must be provided with all the information required to create a new blog post, including the author id, the blog post title and its content.
 
