@@ -71,7 +71,7 @@ This endpoint can be reached with and without parameters. When no parameters are
 
 #### Response Format
 
-Upon a successful request with status code 200, a JSON object containing the requested list is returned in the response. Requests for ALL and SINGLE user details are both returned as an array. In the single case, the array contains only one user details object.
+Upon a successful request with status code `200`, a JSON object containing the requested list is returned in the response. Requests for ALL and SINGLE user details are both returned as an array. In the single case, the array contains only one user details object.
 
 The JSON response object returned by this endpoint takes the following form:
 
@@ -146,7 +146,7 @@ Only *blogID* and *userID* are recognized as valid query parameters for this end
 
 #### Response Format
 
-Upon a successful request with status code 200, a JSON object containing the requested list is returned in the response. Requests for ALL blog posts, SINGLE USER blog posts, and SINGLE blog post are all returned as an array. In the single blog post case and in cases where only a single post is fetched, the array will contain a single blog post details object.
+Upon a successful request with status code `200`, a JSON object containing the requested list is returned in the response. Requests for ALL blog posts, SINGLE USER blog posts, and SINGLE blog post are all returned as an array. In the single blog post case and in cases where only a single post is fetched, the array will contain a single blog post details object.
 
 The JSON response object returned by this endpoint takes the following form:
 
@@ -207,7 +207,7 @@ The API will accept any other key pairs present in the request body object, but 
 
 #### Response Format
 
-Upon a successful request with status code 200, a JSON object containing the complete details of the newly created blog post record is returned in the response. The response includes the automatically generated blog id and timestamps along with the information provided by the client in the request.
+Upon a successful request with status code `200`, a JSON object containing the complete details of the newly created blog post record is returned in the response. The response includes the automatically generated blog id and timestamps along with the information provided by the client in the request.
 
 The JSON response object returned by this endpoint takes the following form:
 
@@ -260,7 +260,7 @@ The API will accept any other key pairs present in the request body object, but 
 
 #### Response Format
 
-Upon a successful request with status code 200, a JSON object containing the *updated details* of the user record is returned in the response. 
+Upon a successful request with status code `200`, a JSON object containing the *updated details* of the user record is returned in the response. 
 
 The JSON response object returned by this endpoint takes the form presented below, but includes only the key-pairs provided in the update request. The updated address fields are grouped together into their own object to make explicit that the changes occured in a separate table.
 
